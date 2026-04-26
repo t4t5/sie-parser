@@ -340,10 +340,8 @@ fn read_quoted(reader: &mut Reader, diags: &mut Vec<Diagnostic>) -> Token {
             saw_unterminated = true;
             break;
         }
-        if b < 0x20 || b == 0x7F {
-            if control_char_at.is_none() {
-                control_char_at = Some(reader.pos);
-            }
+        if (b < 0x20 || b == 0x7F) && control_char_at.is_none() {
+            control_char_at = Some(reader.pos);
         }
         reader.pos += 1;
     }

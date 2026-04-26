@@ -2,7 +2,7 @@
 //! encoding for files declaring `#FORMAT PC8`.
 //!
 //! The low half (0x00–0x7F) is identical to ASCII. The high half mapping is
-//! transcribed from https://en.wikipedia.org/wiki/Code_page_437 — specifically
+//! transcribed from <https://en.wikipedia.org/wiki/Code_page_437> — specifically
 //! the "Unicode equivalents" column.
 
 use crate::Encoding;

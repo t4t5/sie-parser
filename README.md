@@ -51,7 +51,3 @@ let out = sie_parser::parse(&src);
   built on top of this crate.
 - [`sie.nvim`](https://github.com/t4t5/sie.nvim) — Neovim plugin for `.se`
   files.
-
-## License
-
-Dual-licensed under MIT or Apache-2.0, at your option.

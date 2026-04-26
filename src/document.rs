@@ -27,7 +27,7 @@ pub type AccountNo = u32;
 /// Skatteverket SRU reporting code (e.g. 7302).
 pub type SruCode = u32;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct Company {
     pub name: String,
     /// Stored without dash: `"559174-1383"` → `"5591741383"`. Consumers that
@@ -37,17 +37,6 @@ pub struct Company {
     /// `None` if the address didn't parse cleanly.
     pub postnr: Option<String>,
     pub postort: Option<String>,
-}
-
-impl Default for Company {
-    fn default() -> Self {
-        Self {
-            name: String::new(),
-            orgnr_raw: String::new(),
-            postnr: None,
-            postort: None,
-        }
-    }
 }
 
 #[derive(Debug, Clone)]
