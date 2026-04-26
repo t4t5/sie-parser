@@ -1,49 +1,32 @@
 # sie-parser
 
-Rust parser, encoder, and typed document model for the
-[**SIE 4B**](https://sie.se/format/) file format — the Swedish standard for
-exchanging bookkeeping data between accounting programs.
+Rust parser, encoder, and typed document model for the [**SIE 4B**](https://sie.se/format/) file format — the Swedish standard for exchanging bookkeeping data between accounting programs.
 
-No LSP, async, or tokio dependencies. Use this if you're building any
-SIE-consuming tool (importer, converter, analytics, validator).
+Useful if you're building any SIE-consuming tool (importer, converter, analytics, validator).
 
 ## Usage
 
 ```rust
-use sie_parser::{parse, SieDocument, Severity};
+use sie_parser::{document, read_file};
+use std::path::Path;
 
-let src = std::fs::read_to_string("ledger.se")?;
-let out = parse(&src);
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let src = read_file(Path::new("ledger.se"))?;
+    let doc = document::read(&src)?;
 
-// Surface diagnostics:
-for d in &out.diagnostics {
-    println!("{:?} [{}] {}", d.severity, d.code, d.message);
-}
-
-// Walk the typed document model:
-let doc = SieDocument::from_items(&out.items);
-println!("{}", doc.company.name.as_deref().unwrap_or("(unnamed)"));
-for acc in &doc.accounts {
-    println!("{} {}", acc.no, acc.name);
+    println!("{}", doc.company.name);
+    for acc in doc.accounts.values() {
+        println!("{} {}", acc.no, acc.name);
+    }
+    Ok(())
 }
 ```
 
-`parse` never returns `Err` — every problem becomes a `Diagnostic` with a
-stable `&'static str` code (see `sie_parser::diagnostics`). This means a
-malformed file still produces a partial parse you can inspect.
+`read_file` auto-detects encoding — real-world SIE files are usually
+**CP437** (IBM PC-8) with CRLF line endings — and decodes to UTF-8.
 
-## Encoding
-
-Real-world SIE files are encoded in **CP437** (IBM PC-8) and typically use
-CRLF line endings. The convenience function `read_file` auto-detects the
-encoding (via the `#FORMAT PC8` marker or a UTF-8 validity check) and decodes
-to UTF-8. `parse` itself takes a `&str` and assumes the caller has already
-decoded.
-
-```rust
-let src = sie_parser::read_file("ledger.se")?;
-let out = sie_parser::parse(&src);
-```
+For lower-level access (raw items, byte-offset spans, diagnostics with
+stable error codes), call `parse` directly instead of `document::read`.
 
 ## Companion projects
 
