@@ -10,7 +10,10 @@ pub struct Span {
 
 impl Span {
     pub fn new(byte_offset: usize, byte_len: usize) -> Self {
-        Self { byte_offset, byte_len }
+        Self {
+            byte_offset,
+            byte_len,
+        }
     }
     pub fn end(&self) -> usize {
         self.byte_offset + self.byte_len

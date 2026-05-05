@@ -134,6 +134,9 @@ mod tests {
 
     #[test]
     fn falls_back_to_cp437_on_invalid_utf8() {
-        assert!(matches!(detect_encoding(&[0xFF, 0xFE, 0xFD]), Encoding::Cp437));
+        assert!(matches!(
+            detect_encoding(&[0xFF, 0xFE, 0xFD]),
+            Encoding::Cp437
+        ));
     }
 }

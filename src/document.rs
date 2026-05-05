@@ -75,7 +75,10 @@ impl SieDocument {
 
 /// Parse SIE source and walk the resulting AST into a typed `SieDocument`.
 pub fn read(src: &str) -> Result<SieDocument> {
-    let ParseOutput { items, diagnostics: _ } = parser::parse(src);
+    let ParseOutput {
+        items,
+        diagnostics: _,
+    } = parser::parse(src);
 
     let mut doc = SieDocument::default();
     let mut pending_sru: Vec<(AccountNo, SruCode)> = Vec::new();

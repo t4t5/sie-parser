@@ -1,12 +1,12 @@
 //! Integration test: parse the real SIE4 export from Visma Administration 2000
 //! and assert it produces no Error-severity diagnostics.
 
-use sie_parser::{decode_cp437, parse, Severity};
+use sie_parser::{Severity, decode_cp437, parse};
 
 #[test]
 fn sample_parses_without_errors() {
-    let bytes = std::fs::read("tests/fixtures/sample.se")
-        .expect("tests/fixtures/sample.se must exist");
+    let bytes =
+        std::fs::read("tests/fixtures/sample.se").expect("tests/fixtures/sample.se must exist");
     let text = decode_cp437(&bytes);
     let out = parse(&text);
     let errors: Vec<_> = out
@@ -23,7 +23,10 @@ fn sample_parses_without_errors() {
         "expected a large number of items from the 4k-line sample, got {}",
         out.items.len()
     );
-    assert_eq!(out.items[0].label, "#FLAGGA", "first item should be #FLAGGA");
+    assert_eq!(
+        out.items[0].label, "#FLAGGA",
+        "first item should be #FLAGGA"
+    );
 }
 
 #[test]

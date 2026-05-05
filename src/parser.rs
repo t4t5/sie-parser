@@ -4,9 +4,7 @@
 
 use crate::diagnostics as dc;
 use crate::labels::{self, FieldKind, FieldSpec};
-use crate::types::{
-    Diagnostic, Field, FieldValue, Item, ParseOutput, Severity, Span,
-};
+use crate::types::{Diagnostic, Field, FieldValue, Item, ParseOutput, Severity, Span};
 
 pub fn parse(input: &str) -> ParseOutput {
     let bytes = input.as_bytes();
@@ -44,10 +42,7 @@ pub fn parse(input: &str) -> ParseOutput {
                 TokenKind::OpenBrace => {
                     match state {
                         ParseState::TopLevel => {
-                            if matches!(
-                                items.last().map(|it| it.label.as_str()),
-                                Some("#VER")
-                            ) {
+                            if matches!(items.last().map(|it| it.label.as_str()), Some("#VER")) {
                                 state = ParseState::InsideVer {
                                     parent_index: items.len() - 1,
                                     open_span: tokens[0].span,
@@ -77,10 +72,8 @@ pub fn parse(input: &str) -> ParseOutput {
                         ParseState::InsideVer { parent_index, .. } => {
                             let end = tokens[0].span.end();
                             let parent = &mut items[parent_index];
-                            parent.span = Span::new(
-                                parent.span.byte_offset,
-                                end - parent.span.byte_offset,
-                            );
+                            parent.span =
+                                Span::new(parent.span.byte_offset, end - parent.span.byte_offset);
                             state = ParseState::TopLevel;
                         }
                         ParseState::TopLevel => {
@@ -287,7 +280,13 @@ fn read_bare(reader: &mut Reader) -> Token {
     let start = reader.pos;
     while reader.pos < reader.bytes.len() {
         let b = reader.bytes[reader.pos];
-        if b == b' ' || b == b'\t' || b == b'\n' || b == b'\r' || b == b'{' || b == b'}' || b == b'"'
+        if b == b' '
+            || b == b'\t'
+            || b == b'\n'
+            || b == b'\r'
+            || b == b'{'
+            || b == b'}'
+            || b == b'"'
         {
             break;
         }
@@ -537,11 +536,15 @@ fn build_item(
 
 fn token_to_field(t: &Token) -> Field {
     let value = match t.kind {
-        TokenKind::Quoted => FieldValue::Quoted { text: t.text.clone() },
+        TokenKind::Quoted => FieldValue::Quoted {
+            text: t.text.clone(),
+        },
         TokenKind::ObjectList => FieldValue::ObjectList {
             tokens: t.object_tokens.clone(),
         },
-        _ => FieldValue::Bare { text: t.text.clone() },
+        _ => FieldValue::Bare {
+            text: t.text.clone(),
+        },
     };
     Field {
         value,
@@ -564,8 +567,10 @@ fn validate_field(tok: &Token, spec: &FieldSpec, diags: &mut Vec<Diagnostic>) {
     match &spec.kind {
         FieldKind::String | FieldKind::Raw => { /* always ok */ }
         FieldKind::Integer => {
-            if matches!(tok.kind, TokenKind::ObjectList | TokenKind::OpenBrace | TokenKind::CloseBrace)
-                || !is_integer(&tok.text)
+            if matches!(
+                tok.kind,
+                TokenKind::ObjectList | TokenKind::OpenBrace | TokenKind::CloseBrace
+            ) || !is_integer(&tok.text)
             {
                 diags.push(Diagnostic {
                     code: dc::BAD_INTEGER,
@@ -580,8 +585,10 @@ fn validate_field(tok: &Token, spec: &FieldSpec, diags: &mut Vec<Diagnostic>) {
             }
         }
         FieldKind::Decimal => {
-            if matches!(tok.kind, TokenKind::ObjectList | TokenKind::OpenBrace | TokenKind::CloseBrace)
-                || !is_decimal(&tok.text)
+            if matches!(
+                tok.kind,
+                TokenKind::ObjectList | TokenKind::OpenBrace | TokenKind::CloseBrace
+            ) || !is_decimal(&tok.text)
             {
                 diags.push(Diagnostic {
                     code: dc::BAD_AMOUNT,
@@ -596,8 +603,10 @@ fn validate_field(tok: &Token, spec: &FieldSpec, diags: &mut Vec<Diagnostic>) {
             }
         }
         FieldKind::Date => {
-            if matches!(tok.kind, TokenKind::ObjectList | TokenKind::OpenBrace | TokenKind::CloseBrace)
-                || !is_date(&tok.text)
+            if matches!(
+                tok.kind,
+                TokenKind::ObjectList | TokenKind::OpenBrace | TokenKind::CloseBrace
+            ) || !is_date(&tok.text)
             {
                 diags.push(Diagnostic {
                     code: dc::BAD_DATE_FORMAT,
@@ -613,9 +622,7 @@ fn validate_field(tok: &Token, spec: &FieldSpec, diags: &mut Vec<Diagnostic>) {
         }
         FieldKind::Enum(variants) => {
             let ok = tok.text.as_str() != ""
-                && variants
-                    .iter()
-                    .any(|v| v.eq_ignore_ascii_case(&tok.text));
+                && variants.iter().any(|v| v.eq_ignore_ascii_case(&tok.text));
             if !ok || matches!(tok.kind, TokenKind::ObjectList) {
                 diags.push(Diagnostic {
                     code: dc::BAD_ENUM_VALUE,
@@ -776,9 +783,7 @@ mod tests {
 
     #[test]
     fn inline_object_list_empty() {
-        let out = parse_ok(
-            "#FLAGGA 0\n#VER A 1 20210101\n{\n#TRANS 1910 {} -1000.00\n}\n",
-        );
+        let out = parse_ok("#FLAGGA 0\n#VER A 1 20210101\n{\n#TRANS 1910 {} -1000.00\n}\n");
         assert!(errs(&out).is_empty(), "{:#?}", out.diagnostics);
         let trans = &out.items[1].children[0];
         if let FieldValue::ObjectList { tokens } = &trans.fields[1].value {
@@ -796,7 +801,15 @@ mod tests {
         assert!(errs(&out).is_empty(), "{:#?}", out.diagnostics);
         let trans = &out.items[1].children[0];
         if let FieldValue::ObjectList { tokens } = &trans.fields[1].value {
-            assert_eq!(tokens, &vec!["1".to_string(), "456".to_string(), "7".to_string(), "47".to_string()]);
+            assert_eq!(
+                tokens,
+                &vec![
+                    "1".to_string(),
+                    "456".to_string(),
+                    "7".to_string(),
+                    "47".to_string()
+                ]
+            );
         } else {
             panic!();
         }
@@ -879,9 +892,12 @@ mod tests {
     fn flagga_not_first_is_warning() {
         let src = "#KONTO 1510 \"Cash\"\n";
         let out = parse_ok(src);
-        let warns: Vec<&str> = out.diagnostics.iter()
+        let warns: Vec<&str> = out
+            .diagnostics
+            .iter()
             .filter(|d| d.severity == Severity::Warning)
-            .map(|d| d.code).collect();
+            .map(|d| d.code)
+            .collect();
         assert!(warns.contains(&dc::FLAGGA_NOT_FIRST));
     }
 
@@ -889,9 +905,12 @@ mod tests {
     fn unknown_label_is_info() {
         let src = "#FLAGGA 0\n#FUTURE_ITEM 123\n";
         let out = parse_ok(src);
-        let infos: Vec<&str> = out.diagnostics.iter()
+        let infos: Vec<&str> = out
+            .diagnostics
+            .iter()
             .filter(|d| d.severity == Severity::Info)
-            .map(|d| d.code).collect();
+            .map(|d| d.code)
+            .collect();
         assert!(infos.contains(&dc::UNKNOWN_LABEL));
         // unknown labels do not produce errors
         assert!(errs(&out).is_empty());

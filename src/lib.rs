@@ -1,8 +1,4 @@
 //! SIE 4B parser, encoder, and typed document model.
-//!
-//! The parser is stateless: every public entry point takes the full source as
-//! input. This mirrors the `csvx` design — re-parsing on demand keeps the
-//! internal model trivial and fast enough for multi-thousand line files.
 
 pub mod cp437;
 pub mod diagnostics;
@@ -12,14 +8,10 @@ pub mod parser;
 pub mod types;
 
 pub use cp437::{decode_cp437, detect_encoding, encode_cp437};
-pub use document::{
-    Account, AccountNo, Company, FiscalYear, SieDocument, SruCode, YearIdx,
-};
+pub use document::{Account, AccountNo, Company, FiscalYear, SieDocument, SruCode, YearIdx};
 pub use labels::{FieldKind, FieldSpec, LabelSpec, all_labels, label_info};
 pub use parser::parse;
-pub use types::{
-    Diagnostic, Field, FieldValue, Item, ParseOutput, Severity, Span,
-};
+pub use types::{Diagnostic, Field, FieldValue, Item, ParseOutput, Severity, Span};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Encoding {
@@ -59,7 +51,9 @@ pub fn offset_to_line_col(input: &str, offset: usize) -> (u32, u32) {
             line_start = i + 1;
         }
     }
-    let col_bytes = offset.saturating_sub(line_start).min(input.len() - line_start.min(input.len()));
+    let col_bytes = offset
+        .saturating_sub(line_start)
+        .min(input.len() - line_start.min(input.len()));
     let line_slice = &input.as_bytes()[line_start..(line_start + col_bytes).min(input.len())];
     let col = std::str::from_utf8(line_slice)
         .map(|s| s.chars().count() as u32)
