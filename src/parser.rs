@@ -317,8 +317,8 @@ fn read_quoted(reader: &mut Reader, diags: &mut Vec<Diagnostic>) -> Token {
         let b = reader.bytes[reader.pos];
         if b == b'\\' {
             // Scan past the escape pair. \" and \\ are the meaningful escapes
-            // per spec §5.7; other escapes are treated as "drop the backslash,
-            // keep the next char" which round-trips safely.
+            // per spec §5.7. Unknown pairs retain the backslash when decoded;
+            // real exporters put unescaped Windows paths in #FNR.
             if reader.pos + 1 >= reader.bytes.len() {
                 saw_unterminated = true;
                 break;
@@ -389,7 +389,9 @@ fn unescape_quoted_body(s: &str) -> String {
             match chars.next() {
                 Some(next) if next == '"' || next == '\\' => out.push(next),
                 Some(next) => {
-                    // Unknown escape: keep the character literally, drop the backslash.
+                    // Unknown escape: preserve both characters. This is needed
+                    // for common #FNR values such as `C:\ProgramData`.
+                    out.push('\\');
                     out.push(next);
                 }
                 None => { /* trailing backslash, already flagged */ }

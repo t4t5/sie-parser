@@ -6,12 +6,21 @@ pub mod document;
 pub mod labels;
 pub mod parser;
 pub mod types;
+pub mod writer;
 
 pub use cp437::{decode_cp437, detect_encoding, encode_cp437};
-pub use document::{Account, AccountNo, Company, FiscalYear, SieDocument, SruCode, YearIdx};
+pub use document::{
+    Account, AccountNo, Company, Dimension, DimensionNo, FiscalYear, Header, ObjectList,
+    PeriodBalance, SieDate, SieDocument, SieObject, SruCode, Verification, Voucher, VoucherRow,
+    VoucherRowKind, YearIdx, YearMonth,
+};
 pub use labels::{FieldKind, FieldSpec, LabelSpec, all_labels, label_info};
 pub use parser::parse;
 pub use types::{Diagnostic, Field, FieldValue, Item, ParseOutput, Severity, Span};
+pub use writer::{
+    encode as encode_document, render as render_document, validate as validate_document,
+    write_file as write_document,
+};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Encoding {

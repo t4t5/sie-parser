@@ -1,7 +1,7 @@
 //! Integration test: parse the real SIE4 export from Visma Administration 2000
 //! and assert it produces no Error-severity diagnostics.
 
-use sie_parser::{Severity, decode_cp437, parse};
+use sie_parser::{Severity, decode_cp437, document, parse, render_document};
 
 #[test]
 fn sample_parses_without_errors() {
@@ -47,4 +47,38 @@ fn sample_company_name_decoded_from_cp437() {
         _ => panic!("unexpected field value"),
     };
     assert_eq!(text, "Övningsbolaget AB");
+}
+
+#[test]
+fn sample_populates_typed_records_and_round_trips_semantically() {
+    let bytes = std::fs::read("tests/fixtures/sample.se").unwrap();
+    let text = decode_cp437(&bytes);
+    let document = document::read(&text).expect("read typed sample document");
+
+    assert_eq!(document.header.program_version, "2022.2");
+    assert_eq!(
+        document.company.file_number.as_deref(),
+        Some(r"C:\ProgramData\SPCS\SPCS Administration\F÷retag\Ovnbol2000")
+    );
+    assert_eq!(document.company.postal_address, "123 45 STORSTAD");
+    assert_eq!(document.company.postnr.as_deref(), Some("12345"));
+    assert_eq!(document.dimensions.len(), 2);
+    assert!(!document.objects.is_empty());
+    assert!(!document.vouchers.is_empty());
+    assert!(!document.vouchers[0].rows.is_empty());
+
+    let rendered = render_document(&document).expect("render typed sample document");
+    let parsed = parse(&rendered);
+    let errors: Vec<_> = parsed
+        .diagnostics
+        .iter()
+        .filter(|diagnostic| diagnostic.severity == Severity::Error)
+        .collect();
+    assert!(
+        errors.is_empty(),
+        "generated output should parse without errors: {errors:#?}"
+    );
+
+    let reparsed = document::read(&rendered).expect("read rendered sample document");
+    assert_eq!(reparsed, document);
 }
